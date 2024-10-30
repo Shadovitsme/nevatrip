@@ -13,23 +13,22 @@ function randomDate(start, end, startHour, endHour) {
 
 $("#book_button").on("click", () => {
     let barcode = $("#barcode").text().trim();
+    let payload = {
+        event_id: getRandomInt(1000000),
+        event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
+        ticket_adult_price: getRandomInt(1000),
+        ticket_adult_quantity: getRandomInt(20),
+        ticket_kid_price: getRandomInt(1000),
+        ticket_kid_quantity: getRandomInt(20),
+        barcode: barcode,
+    };
     $.ajax({
         url: "/book",
         method: "GET",
         dataType: "json",
-        contentType: "applicatio/json",
-        data: JSON.stringify({
-            aaaaa: "aaaaa",
-            // event_id: getRandomInt(1000000),
-            // event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
-            // ticket_adult_price: getRandomInt(1000),
-            // ticket_adult_quantity: getRandomInt(20),
-            // ticket_kid_price: getRandomInt(1000),
-            // ticket_kid_quantity: getRandomInt(20),
-            // barcode: barcode,
-        }),
+        data: payload,
         success: function (data) {
-            console.log(JSON.stringify(data));
+            console.log(data);
             // result_queue(
             //     "Результат авторизации пользователя",
             //     JSON.stringify(data)

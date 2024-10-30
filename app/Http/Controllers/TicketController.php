@@ -8,10 +8,17 @@ use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
-    public function book()
+    public function book(Request $req)
     {
         //  event_id, event_date, ticket_adult_price, ticket_adult_quantity, ticket_kid_price, ticket_kid_quantity, barcode. На что она может вернуть либо {message: 'order successfully booked'}, либо {error: 'barcode already exists'}. 
-        return json_encode('hi');
+        // TODO сделать табличку с бронюь и покупкой
+        if ($this->checkBarcodeUniq($req->query('barcode'))) {
+            return json_encode('error : barcode already exists');
+        } else {
+            return json_encode('message : order successfully booked');
+        }
+        
+        // return json_encode($_GET);
     }
 
     public function approve()
