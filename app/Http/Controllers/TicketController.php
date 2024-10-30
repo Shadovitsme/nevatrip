@@ -11,6 +11,7 @@ class TicketController extends Controller
     public function book()
     {
         //  event_id, event_date, ticket_adult_price, ticket_adult_quantity, ticket_kid_price, ticket_kid_quantity, barcode. На что она может вернуть либо {message: 'order successfully booked'}, либо {error: 'barcode already exists'}. 
+        return json_encode('hi');
     }
 
     public function approve()
