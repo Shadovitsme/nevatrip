@@ -1,0 +1,19 @@
+openapi: '3.0.3'
+info:
+  title: nevatrip swagger
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /api.site.com/book:
+    get:
+      responses:
+        '200':
+          description: OK
+  /api.site.com/approve:
+    get:
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: OK
