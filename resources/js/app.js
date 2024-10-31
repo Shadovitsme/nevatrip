@@ -10,9 +10,17 @@ function randomDate(start, end, startHour, endHour) {
     date.setHours(hour);
     return date;
 }
+function generateBarcode() {
+    let barcode = "";
+
+    for (let i = 0; i < 120; i++) {
+        barcode = barcode + getRandomInt(9);
+    }
+    return barcode;
+}
 
 $("#book_button").on("click", () => {
-    let barcode = $("#barcode").text().trim();
+    let barcode = generateBarcode();
     let payload = {
         event_id: getRandomInt(1000000),
         event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
@@ -29,10 +37,6 @@ $("#book_button").on("click", () => {
         data: payload,
         success: function (data) {
             console.log(data);
-            // result_queue(
-            //     "Результат авторизации пользователя",
-            //     JSON.stringify(data)
-            // );
         },
     });
 });

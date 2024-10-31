@@ -9,17 +9,6 @@
 
 <body>
     <button id="book_button">book</button>
-    <?php
-    function generateBarcode()
-    {
-        $barcode = '';
-        for ($i = 1; $i <= 120; $i++) {
-            $barcode .= rand(0, 9);
-        }
-        echo $barcode;
-    }
-    ?>
-    <div id="barcode"><?php generateBarcode() ?></div>
 </body>
 
 </html>
