@@ -10,20 +10,46 @@ class TicketController extends Controller
 {
     public function book(Request $req)
     {
-        //  event_id, event_date, ticket_adult_price, ticket_adult_quantity, ticket_kid_price, ticket_kid_quantity, barcode. На что она может вернуть либо {message: 'order successfully booked'}, либо {error: 'barcode already exists'}. 
-        // TODO сделать табличку с бронюь и покупкой
-        if ($this->checkBarcodeUniq($req->query('barcode'))) {
+        if ($this->checkBarcodeUniq($req->query('barcode')) || $this->findBarcodeInBooking($req->query('barcode'))) {
             return json_encode('error : barcode already exists');
         } else {
+            DB::table('booking')->insert(['barcode' => $req->query('barcode')]);
             return json_encode('message : order successfully booked');
         }
-        
-        // return json_encode($_GET);
     }
 
-    public function approve()
+    public function findBarcodeInBooking($barcode)
+    {
+        $queryResult = DB::table('booking')->where('barcode', $barcode)->get();
+        if (empty($queryResult)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function approve($barcode)
     {
         // (https://api.site.com/approve), который принимает только barcode. Ответов может быть 2 варианта - успешный: {message: 'order successfully aproved'} и различные варианты ошибок {error: 'event cancelled'}, {error: 'no tickets'}, {error: 'no seats'}, {error: 'fan removed'}. В случае успеха, сохраняем заказ в БД
+        $answerChoose = rand(0, 1);
+        if ($answerChoose == 0) {
+            return json_encode('message: order successfully aproved');
+        } else {
+            switch (rand(0, 4)) {
+                case 0:
+                    return json_encode('error: event cancelled');
+                    break;
+                case 1:
+                    return json_encode('error: no tickets');
+                    break;
+                case 2:
+                    return json_encode('error: no seats');
+                    break;
+                case 3:
+                    return json_encode('error: fan removed');
+                    break;
+            }
+        }
     }
 
     function generateBarcode()
