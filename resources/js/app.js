@@ -8,6 +8,12 @@ function randomDate(start, end, startHour, endHour) {
     var date = new Date(+start + Math.random() * (end - start));
     var hour = (startHour + Math.random() * (endHour - startHour)) | 0;
     date.setHours(hour);
+    var options = {
+        year: "numeric",
+        month: "2-digit",
+        day: "numeric",
+    };
+    date = date.toLocaleString("ru", options);
     return date;
 }
 function generateBarcode() {
@@ -30,6 +36,7 @@ $("#book_button").on("click", () => {
         ticket_kid_quantity: getRandomInt(20),
         barcode: barcode,
     };
+    alert(randomDate(new Date(2020, 0, 1), new Date(), 0, 24));
     $.ajax({
         url: "/book",
         method: "GET",
