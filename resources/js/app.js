@@ -36,7 +36,6 @@ $("#book_button").on("click", () => {
         ticket_kid_quantity: getRandomInt(20),
         barcode: barcode,
     };
-    alert(randomDate(new Date(2020, 0, 1), new Date(), 0, 24));
     $.ajax({
         url: "/book",
         method: "GET",

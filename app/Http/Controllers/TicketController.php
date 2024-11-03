@@ -8,12 +8,27 @@ use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
-    public function book(Request $req)
+    public function chooseAction(Request $req)
     {
-        if ($this->checkBarcodeUniq($req->query('barcode')) || $this->findBarcodeInBooking($req->query('barcode'))) {
+        $barcode = $req->query('barcode');
+        $book = $this->book($barcode);
+        while ($book == json_encode('error : barcode already exists')) {
+            $barcode = generateBarcode();
+            $book = $this->book($barcode);
+        }
+        $approve = $this->approve($barcode);
+        if ($approve !== json_encode('message: order successfully aproved')) {
+            return $approve;
+        }
+        return $this->addOrderToDatabase($req->query('ticket_adult_price'), $req->query('ticket_adult_quantity'), $req->query('ticket_kid_price'), $req->query('ticket_kid_quantity'), $req->query('event_id'), $req->query('event_date'), $barcode);
+    }
+
+    public function book($barcode)
+    {
+        if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
             return json_encode('error : barcode already exists');
         } else {
-            DB::table('booking')->insert(['barcode' => $req->query('barcode')]);
+            DB::table('booking')->insert(['barcode' => $barcode]);
             return json_encode('message : order successfully booked');
         }
     }
@@ -30,7 +45,6 @@ class TicketController extends Controller
 
     public function approve($barcode)
     {
-        // (https://api.site.com/approve), который принимает только barcode. Ответов может быть 2 варианта - успешный: {message: 'order successfully aproved'} и различные варианты ошибок {error: 'event cancelled'}, {error: 'no tickets'}, {error: 'no seats'}, {error: 'fan removed'}. В случае успеха, сохраняем заказ в БД
         $answerChoose = rand(0, 1);
         if ($answerChoose == 0) {
             return json_encode('message: order successfully aproved');
@@ -61,8 +75,7 @@ class TicketController extends Controller
         return $barcode;
     }
 
-    // TODO добавить документационную письменность касательно того почему тут так стоят тру фолс
-    function checkBarcodeUniq($barcode)
+    function checkBarcodeUniqInOrderTable($barcode)
     {
         $queryResult = DB::table('order_list')->where('barcode', $barcode)->get();
         if (empty($queryResult)) {
@@ -71,20 +84,9 @@ class TicketController extends Controller
             return false;
         }
     }
-    function addOrderToDatabase()
+
+    function addOrderToDatabase($ticket_adult_price, $ticket_adult_quantity, $ticket_kid_price, $ticket_kid_quantity, $event_id, $event_date, $barcode)
     {
-        $event_id = rand(1, 100);
-        $event_date = '2021-08-21 13:00:00';
-        $ticket_adult_price = rand(1, 1000);
-        $ticket_adult_quantity = rand(1, 10);
-        $ticket_kid_price = rand(1, 1000);
-        $ticket_kid_quantity = rand(1, 10);
-
-        $barcode = generateBarcode();
-        while (checkBarcodeUniq($barcode)) {
-            $barcode = generateBarcode();
-        }
-
         // TODO сделать расчет итоговой цены в самой таблице
         $equal_price = $ticket_adult_price * $ticket_adult_quantity + $ticket_kid_price * $ticket_kid_quantity;
         DB::table('order_list')->insert([
@@ -99,7 +101,7 @@ class TicketController extends Controller
         ]);
         $queryResult = DB::table('order_list')->get();
         foreach ($queryResult as $result) {
-            echo 'Аргументы которые функция получает на входе: event_id - ' . $result->event_id . ', event_date - ' . $result->event_date . ', ticket_adult_price - ' . $result->ticket_adult_price . ', ticket_adult_quantity - ' . $result->ticket_adult_quantity . ', ticket_kid_price - ' . $result->ticket_kid_price . ', ticket_kid_quantity - ' . $result->ticket_kid_quantity . ' barcode - ' . $result->barcode . '<b> Итог: </b>' . $result->equal_price . '<br />';
+            return 'Аргументы которые функция получает на входе: event_id - ' . $result->event_id . ', event_date - ' . $result->event_date . ', ticket_adult_price - ' . $result->ticket_adult_price . ', ticket_adult_quantity - ' . $result->ticket_adult_quantity . ', ticket_kid_price - ' . $result->ticket_kid_price . ', ticket_kid_quantity - ' . $result->ticket_kid_quantity . ' barcode - ' . $result->barcode . '<b> Итог: </b>' . $result->equal_price . '<br />';
         }
     }
 }
