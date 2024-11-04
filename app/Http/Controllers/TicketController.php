@@ -11,7 +11,7 @@ class TicketController extends Controller
 {
     public function chooseAction(Request $req)
     {
-        $barcode = $req->query('barcode');
+        $barcode = $this->generateBarcode();
         $book = $this->book($barcode);
         while ($book == json_encode('error : barcode already exists')) {
             $barcode = generateBarcode();
@@ -103,9 +103,10 @@ class TicketController extends Controller
             'barcode' => $barcode,
             'equal_price' => $equal_price
         ]);
-        $queryResult = DB::table('order_list')->get();
+        $queryResult = DB::table('order_list')->where('barcode', $barcode)->get();
         foreach ($queryResult as $result) {
-            return 'Аргументы которые функция получает на входе: event_id - ' . $result->event_id . ', event_date - ' . $result->event_date . ', ticket_adult_price - ' . $result->ticket_adult_price . ', ticket_adult_quantity - ' . $result->ticket_adult_quantity . ', ticket_kid_price - ' . $result->ticket_kid_price . ', ticket_kid_quantity - ' . $result->ticket_kid_quantity . ' barcode - ' . $result->barcode . '<b> Итог: </b>' . $result->equal_price . '<br />';
+            return response(['message' =>
+            'Аргументы которые функция получает на входе: event_id - ' . $result->event_id . ', event_date - ' . $result->event_date . ', ticket_adult_price - ' . $result->ticket_adult_price . ', ticket_adult_quantity - ' . $result->ticket_adult_quantity . ', ticket_kid_price - ' . $result->ticket_kid_price . ', ticket_kid_quantity - ' . $result->ticket_kid_quantity . ' barcode - ' . $result->barcode . '<b> Итог: </b>' . $result->equal_price . '<br />'], 200, ['Content-type' => 'Application/json']);;
         }
     }
 }
