@@ -11,6 +11,8 @@ class TicketController extends Controller
 {
     public function chooseAction(Request $req)
     {
+        // TODO вернуть редирект сюды и прописать тут кучу редиректов
+        // TODO сделать тут запрос к серверу
         $barcode = $this->generateBarcode();
         $book = $this->book($barcode);
         while ($book == json_encode('error : barcode already exists')) {
@@ -28,10 +30,10 @@ class TicketController extends Controller
     public function book($barcode)
     {
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
-            // TODO везде переписать на вот такой ответ
             return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
         } else {
             DB::table('booking')->insert(['barcode' => $barcode]);
+            redirect()->action([TicketController::class, 'approve'], ['barcode' => $barcode]);
             return response(['message' => 'order successfully booked'], 200, ['Content-type' => 'Application/json']);
         }
     }
@@ -50,27 +52,27 @@ class TicketController extends Controller
     {
         $answerChoose = rand(0, 1);
         if ($answerChoose == 0) {
-            return json_encode('message: order successfully aproved');
+            return redirect()->action([TicketController::class, 'addOrderToDatabase'], ['barcode' => $barcode])->with('content', 'order successfully aproved')->with('status', 200)->with('headers', ['Content-type' => 'Application/json']);
         } else {
             switch (rand(0, 4)) {
                 case 0:
-                    return json_encode('error: event cancelled');
+                    return response(['error' => 'event cancelled'], 400, ['Content-type' => 'Application/json']);
                     break;
                 case 1:
-                    return json_encode('error: no tickets');
+                    return response(['error' => 'error: no tickets'], 400, ['Content-type' => 'Application/json']);
                     break;
                 case 2:
-                    return json_encode('error: no seats');
+                    return response(['error' => 'error: no tickets'], 400, ['Content-type' => 'Application/json']);
                     break;
                 case 3:
-                    return json_encode('error: fan removed');
+                    return response(['error' => 'error: no tickets'], 400, ['Content-type' => 'Application/json']);
                     break;
             }
         }
     }
-
+// TODO понять почему иногда возвращается ничего
     function generateBarcode()
-    { // TODO убрать то же самое из AJAX
+    { 
       // TODO Генерировать EAN-8 barcode
         $barcode = '';
         for ($i = 1; $i <= 120; $i++) {
@@ -89,8 +91,15 @@ class TicketController extends Controller
         }
     }
 
-    function addOrderToDatabase($ticket_adult_price, $ticket_adult_quantity, $ticket_kid_price, $ticket_kid_quantity, $event_id, $event_date, $barcode)
+    function addOrderToDatabase(Request $req)
     {
+        $ticket_adult_price = $req->query('ticket_adult_price');
+        $ticket_adult_quantity = $req->query('ticket_adult_quantity');
+        $ticket_kid_price = $req->query('ticket_kid_price');
+        $ticket_kid_quantity = $req->query('ticket_kid_quantity');
+        $event_id = $req->query('event_id');
+        $event_date = $req->query('event_date');
+        $barcode = $req->query('barcode');
         // TODO сделать расчет итоговой цены в самой таблице
         $equal_price = $ticket_adult_price * $ticket_adult_quantity + $ticket_kid_price * $ticket_kid_quantity;
         DB::table('order_list')->insert([
