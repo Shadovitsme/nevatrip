@@ -19,6 +19,7 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
+            - './20-xdebug.ini:/etc/php/8.3/cli/conf.d/20-xdebug.ini'
         networks:
             - sail
         depends_on:

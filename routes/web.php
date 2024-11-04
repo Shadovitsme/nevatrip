@@ -10,4 +10,7 @@ Route::get('/', function () {
 Route::controller(TicketController::class)->group(function () {
     Route::get('/book', 'chooseAction');
     Route::post('/approve', 'approve');
+    Route::post('/external', function () {
+        return response(['message' => 'good!'], 200);
+    });
 });

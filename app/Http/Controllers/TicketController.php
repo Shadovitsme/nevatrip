@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 
 class TicketController extends Controller
@@ -20,16 +21,18 @@ class TicketController extends Controller
         if ($approve !== json_encode('message: order successfully aproved')) {
             return $approve;
         }
+        
         return $this->addOrderToDatabase($req->query('ticket_adult_price'), $req->query('ticket_adult_quantity'), $req->query('ticket_kid_price'), $req->query('ticket_kid_quantity'), $req->query('event_id'), $req->query('event_date'), $barcode);
     }
 
     public function book($barcode)
     {
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
-            return json_encode('error : barcode already exists');
+            // TODO везде переписать на вот такой ответ
+            return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
         } else {
             DB::table('booking')->insert(['barcode' => $barcode]);
-            return json_encode('message : order successfully booked');
+            return response(['message' => 'order successfully booked'], 200, ['Content-type' => 'Application/json']);
         }
     }
 
@@ -67,7 +70,8 @@ class TicketController extends Controller
     }
 
     function generateBarcode()
-    {
+    { // TODO убрать то же самое из AJAX
+      // TODO Генерировать EAN-8 barcode
         $barcode = '';
         for ($i = 1; $i <= 120; $i++) {
             $barcode .= rand(0, 9);
