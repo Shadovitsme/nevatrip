@@ -13,7 +13,8 @@ class TicketController extends Controller
     {
         $barcode = $this->generateBarcode();
         $book = $this->book($barcode);
-        while ($book == json_encode('error : barcode already exists')) {
+        while ($book == json_encode(['error' => 'barcode already exists'])) {
+            echo $book;
             $barcode = generateBarcode();
             $book = $this->book($barcode);
         }
@@ -29,7 +30,7 @@ class TicketController extends Controller
     {
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
             // TODO везде переписать на вот такой ответ
-            return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
+            return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json'])->json(['error' => 'barcode already exists']);
         } else {
             DB::table('booking')->insert(['barcode' => $barcode]);
             return response(['message' => 'order successfully booked'], 200, ['Content-type' => 'Application/json']);
@@ -45,6 +46,7 @@ class TicketController extends Controller
             return false;
         }
     }
+
 
     public function approve($barcode)
     {
