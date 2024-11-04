@@ -14,12 +14,11 @@ class TicketController extends Controller
         $barcode = $this->generateBarcode();
         $book = $this->book($barcode);
         while ($book == json_encode(['error' => 'barcode already exists'])) {
-            echo $book;
             $barcode = generateBarcode();
             $book = $this->book($barcode);
         }
         $approve = $this->approve($barcode);
-        if ($approve !== json_encode('message: order successfully aproved')) {
+        if ($approve !== json_encode(['message' => 'order successfully aproved'])) {
             return $approve;
         }
         
@@ -52,20 +51,20 @@ class TicketController extends Controller
     {
         $answerChoose = rand(0, 1);
         if ($answerChoose == 0) {
-            return json_encode('message: order successfully aproved');
+            return response(['message' => 'order successfully aproved'], 200, ['Content-type' => 'Application/json']);
         } else {
             switch (rand(0, 4)) {
                 case 0:
-                    return json_encode('error: event cancelled');
+                    return response(['error' => 'event cancelled'], 401, ['Content-type' => 'Application/json']);
                     break;
                 case 1:
-                    return json_encode('error: no tickets');
+                    return response(['error' => 'no tickets'], 401, ['Content-type' => 'Application/json']);
                     break;
                 case 2:
-                    return json_encode('error: no seats');
+                    return response(['error' => 'no seats'], 401, ['Content-type' => 'Application/json']);
                     break;
                 case 3:
-                    return json_encode('error: fan removed');
+                    return response(['error' => 'fan removed'], 401, ['Content-type' => 'Application/json']);
                     break;
             }
         }
