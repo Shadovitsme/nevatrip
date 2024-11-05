@@ -28,7 +28,6 @@ class TicketController extends Controller
     public function book($barcode)
     {
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
-            // TODO везде переписать на вот такой ответ
             return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json'])->json(['error' => 'barcode already exists']);
         } else {
             DB::table('booking')->insert(['barcode' => $barcode]);
