@@ -25,15 +25,29 @@ function generateBarcode() {
     }
     return barcode;
 }
-$("#book_button").on("click", () => {
-    let barcode = generateBarcode();
+function book(barcode = generateBarcode()) {
     $.ajax({
         url: "/book/" + barcode,
         method: "GET",
         dataType: "json",
         data: barcode,
-        success: function (data, textStatus, xhr) {},
-    }).done(approve(barcode));
+        success: function (data, textStatus, xhr) {
+            if (xhr.status != 200) {
+                reGenerateBarcode();
+            } else {
+                approve(barcode);
+            }
+        },
+    });
+}
+
+function reGenerateBarcode() {
+    let barcode = generateBarcode();
+    book(barcode);
+}
+
+$("#book_button").on("click", () => {
+    book();
     // TODO сделать тут при феил вызов аякса для перегенерации баркода, а лучше сразу к нему обращаться
 });
 function approve(barcode) {
@@ -42,21 +56,14 @@ function approve(barcode) {
         method: "GET",
         dataType: "json",
         data: { barcode: barcode },
-        success: function (data) {
-            console.log("data");
+        success: function (data, textStatus, xhr) {
+            if (xhr.status == 200) {
+                addToDatabase(barcode);
+            }
         },
-    }).done(addToDatabase(barcode));
+    });
 }
 function addToDatabase(barcode) {
-    let payload = {
-        event_id: getRandomInt(1000000),
-        event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
-        ticket_adult_price: getRandomInt(1000),
-        ticket_adult_quantity: getRandomInt(20),
-        ticket_kid_price: getRandomInt(1000),
-        ticket_kid_quantity: getRandomInt(20),
-        barcode: barcode,
-    };
     $.ajax({
         url: "/addToDatabase",
         method: "get",
