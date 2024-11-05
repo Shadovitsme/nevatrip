@@ -16,14 +16,7 @@ function randomDate(start, end, startHour, endHour) {
     date = date.toLocaleString("ru", options);
     return date;
 }
-let payload = {
-    event_id: getRandomInt(1000000),
-    event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
-    ticket_adult_price: getRandomInt(1000),
-    ticket_adult_quantity: getRandomInt(20),
-    ticket_kid_price: getRandomInt(1000),
-    ticket_kid_quantity: getRandomInt(20),
-};
+
 function generateBarcode() {
     let barcode = "";
 
@@ -41,6 +34,7 @@ $("#book_button").on("click", () => {
         data: barcode,
         success: function (data, textStatus, xhr) {},
     }).done(approve(barcode));
+    // TODO сделать тут при феил вызов аякса для перегенерации баркода, а лучше сразу к нему обращаться
 });
 function approve(barcode) {
     $.ajax({
@@ -51,5 +45,33 @@ function approve(barcode) {
         success: function (data) {
             console.log("data");
         },
-    });
+    }).done(addToDatabase(barcode));
 }
+function addToDatabase(barcode) {
+    let payload = {
+        event_id: getRandomInt(1000000),
+        event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
+        ticket_adult_price: getRandomInt(1000),
+        ticket_adult_quantity: getRandomInt(20),
+        ticket_kid_price: getRandomInt(1000),
+        ticket_kid_quantity: getRandomInt(20),
+        barcode: barcode,
+    };
+    $.ajax({
+        url: "/addToDatabase",
+        method: "get",
+        dataType: "json",
+        data: {
+            event_id: getRandomInt(1000000),
+            event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
+            ticket_adult_price: getRandomInt(1000),
+            ticket_adult_quantity: getRandomInt(20),
+            ticket_kid_price: getRandomInt(1000),
+            ticket_kid_quantity: getRandomInt(20),
+            barcode: barcode,
+        },
+        success: function (data) {
+            console.log("data");
+        },
+    });
+};

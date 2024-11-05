@@ -9,22 +9,6 @@ use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
-    public function chooseAction(Request $req)
-    {
-        $barcode = $this->generateBarcode();
-        $book = $this->book($barcode);
-        while ($book == json_encode(['error' => 'barcode already exists'])) {
-            $barcode = generateBarcode();
-            $book = $this->book($barcode);
-        }
-        $approve = $this->approve($barcode);
-        if ($approve !== json_encode(['message' => 'order successfully aproved'])) {
-            return $approve;
-        }
-        
-        return $this->addOrderToDatabase($req->query('ticket_adult_price'), $req->query('ticket_adult_quantity'), $req->query('ticket_kid_price'), $req->query('ticket_kid_quantity'), $req->query('event_id'), $req->query('event_date'), $barcode);
-    }
-
     public function book($barcode)
     {
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
@@ -89,8 +73,16 @@ class TicketController extends Controller
         }
     }
 
-    function addOrderToDatabase($ticket_adult_price, $ticket_adult_quantity, $ticket_kid_price, $ticket_kid_quantity, $event_id, $event_date, $barcode)
+    function addOrderToDatabase(Request $req)
     {
+        $ticket_adult_price = $req->query('ticket_adult_price');
+        $ticket_adult_quantity = $req->query('ticket_adult_quantity');
+        $ticket_kid_price = $req->query('ticket_kid_price');
+        $ticket_kid_quantity = $req->query('ticket_kid_quantity');
+        $event_id = $req->query('event_id');
+        $event_date = $req->query('event_date');
+        $barcode = $req->query('barcode');
+
         // TODO сделать расчет итоговой цены в самой таблице
         $equal_price = $ticket_adult_price * $ticket_adult_quantity + $ticket_kid_price * $ticket_kid_quantity;
         DB::table('order_list')->insert([
