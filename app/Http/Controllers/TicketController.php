@@ -12,7 +12,7 @@ class TicketController extends Controller
 
     public function book()
     {
-        $barcode = $this->generateBarcode();;
+        $barcode = $this->generateBarcode();
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
             return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
         } else {
@@ -76,11 +76,6 @@ class TicketController extends Controller
         $oneNum = $numSum % 10;
         $controlNum = 10 - $oneNum;
         $barcode = $noFinishedBarcode . $controlNum;
-    //   // TODO Генерировать EAN-8 barcode
-    //     $barcode = '';
-    //     for ($i = 1; $i <= 120; $i++) {
-    //         $barcode .= rand(0, 9);
-    //     }
         return $barcode;
     }
 
@@ -93,7 +88,7 @@ class TicketController extends Controller
             return false;
         }
     }
-
+    
     function addOrderToDatabase(Request $req)
     {
         $ticket_adult_price = $req->query('ticket_adult_price');

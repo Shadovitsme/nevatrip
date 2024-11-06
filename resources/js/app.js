@@ -17,15 +17,8 @@ function randomDate(start, end, startHour, endHour) {
     return date;
 }
 
-function generateBarcode() {
-    let barcode = "";
-
-    for (let i = 0; i < 120; i++) {
-        barcode = barcode + getRandomInt(9);
-    }
-    return barcode;
-}
 function book() {
+    // Как-то передать сюды кучу данных
     $.ajax({
         url: "/book",
         method: "GET",
@@ -40,10 +33,8 @@ function book() {
     });
 }
 
-
 $("#book_button").on("click", () => {
     book();
-    // TODO сделать тут при феил вызов аякса для перегенерации баркода, а лучше сразу к нему обращаться
 });
 function approve(barcode) {
     $.ajax({
@@ -58,20 +49,26 @@ function approve(barcode) {
         },
     });
 }
+
+function dataMock(barcode) {
+    let payload = {
+        event_id: getRandomInt(1000000),
+        event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
+        ticket_adult_price: getRandomInt(1000),
+        ticket_adult_quantity: getRandomInt(20),
+        ticket_kid_price: getRandomInt(1000),
+        ticket_kid_quantity: getRandomInt(20),
+        barcode: barcode,
+    };
+    return payload;
+}
+
 function addToDatabase(barcode) {
     $.ajax({
         url: "/addToDatabase",
         method: "get",
         dataType: "json",
-        data: {
-            event_id: getRandomInt(1000000),
-            event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
-            ticket_adult_price: getRandomInt(1000),
-            ticket_adult_quantity: getRandomInt(20),
-            ticket_kid_price: getRandomInt(1000),
-            ticket_kid_quantity: getRandomInt(20),
-            barcode: barcode,
-        },
+        data: dataMock(barcode),
         success: function (data) {
             console.log("data");
         },
