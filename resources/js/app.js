@@ -18,16 +18,18 @@ function randomDate(start, end, startHour, endHour) {
 }
 
 function book() {
-    // Как-то передать сюды кучу данных
+    let payload = dataMock();
     $.ajax({
         url: "/book",
         method: "GET",
         dataType: "json",
+        data: payload,
         success: function (data, textStatus, xhr) {
             if (xhr.status != 200) {
                 book();
             } else {
-                approve(data.barcode);
+                payload["barcode"] = data.barcode;
+                approve(data.barcode, payload);
             }
         },
     });
@@ -36,7 +38,8 @@ function book() {
 $("#book_button").on("click", () => {
     book();
 });
-function approve(barcode) {
+
+function approve(barcode, payload) {
     $.ajax({
         url: "/approve/" + barcode,
         method: "GET",
@@ -44,13 +47,13 @@ function approve(barcode) {
         data: { barcode: barcode },
         success: function (data, textStatus, xhr) {
             if (xhr.status == 200) {
-                addToDatabase(barcode);
+                addToDatabase(payload);
             }
         },
     });
 }
 
-function dataMock(barcode) {
+function dataMock() {
     let payload = {
         event_id: getRandomInt(1000000),
         event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
@@ -58,17 +61,16 @@ function dataMock(barcode) {
         ticket_adult_quantity: getRandomInt(20),
         ticket_kid_price: getRandomInt(1000),
         ticket_kid_quantity: getRandomInt(20),
-        barcode: barcode,
     };
     return payload;
 }
 
-function addToDatabase(barcode) {
+function addToDatabase(payload) {
     $.ajax({
         url: "/addToDatabase",
         method: "get",
         dataType: "json",
-        data: dataMock(barcode),
+        data: payload,
         success: function (data) {
             console.log("data");
         },

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 class TicketController extends Controller
 {
 
-    public function book()
+    public function book(Request $req)
     {
         $barcode = $this->generateBarcode();
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
@@ -88,7 +88,7 @@ class TicketController extends Controller
             return false;
         }
     }
-    
+
     function addOrderToDatabase(Request $req)
     {
         $ticket_adult_price = $req->query('ticket_adult_price');
