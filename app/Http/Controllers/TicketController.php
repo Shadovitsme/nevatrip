@@ -9,13 +9,20 @@ use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
-    public function book($barcode)
+
+    public function book()
     {
+        $barcode = $this->generateBarcode();;
         if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
-            return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json'])->json(['error' => 'barcode already exists']);
+            return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
         } else {
             DB::table('booking')->insert(['barcode' => $barcode]);
-            return response(['message' => 'order successfully booked'], 200, ['Content-type' => 'Application/json']);
+            return response()->json(
+                [
+                    'barcode' => $barcode,
+                    'message' => 'order successfully booked'
+                ]
+            );
         }
     }
 
@@ -54,12 +61,26 @@ class TicketController extends Controller
     }
 
     function generateBarcode()
-    { // TODO убрать то же самое из AJAX
-      // TODO Генерировать EAN-8 barcode
-        $barcode = '';
-        for ($i = 1; $i <= 120; $i++) {
-            $barcode .= rand(0, 9);
+    {
+        $noFinishedBarcode = rand(0, 9999999);
+        if (strlen($noFinishedBarcode) < 7) {
+            for ($i = 0; $i <= 8 - strlen($noFinishedBarcode); $i++) {
+                $noFinishedBarcode = 0 . $noFinishedBarcode;
+            }
         }
+        $arNotFinishedBarcode = str_split($noFinishedBarcode);
+        $sumNotChetNum = $arNotFinishedBarcode[0] + $arNotFinishedBarcode[2] + $arNotFinishedBarcode[4] + $arNotFinishedBarcode[6];
+        $sumNotChetNum = $sumNotChetNum * 3;
+        $sumChetNum = $arNotFinishedBarcode[0] + $arNotFinishedBarcode[2] + $arNotFinishedBarcode[4] + $arNotFinishedBarcode[6];
+        $numSum = $sumChetNum + $sumNotChetNum;
+        $oneNum = $numSum % 10;
+        $controlNum = 10 - $oneNum;
+        $barcode = $noFinishedBarcode . $controlNum;
+    //   // TODO Генерировать EAN-8 barcode
+    //     $barcode = '';
+    //     for ($i = 1; $i <= 120; $i++) {
+    //         $barcode .= rand(0, 9);
+    //     }
         return $barcode;
     }
 
@@ -95,7 +116,7 @@ class TicketController extends Controller
             'barcode' => $barcode,
             'equal_price' => $equal_price
         ]);
-        $queryResult = DB::table('order_list')->get();
+        $queryResult = DB::table('order_list')->where('barcode', $barcode)->get();
         foreach ($queryResult as $result) {
             return 'Аргументы которые функция получает на входе: event_id - ' . $result->event_id . ', event_date - ' . $result->event_date . ', ticket_adult_price - ' . $result->ticket_adult_price . ', ticket_adult_quantity - ' . $result->ticket_adult_quantity . ', ticket_kid_price - ' . $result->ticket_kid_price . ', ticket_kid_quantity - ' . $result->ticket_kid_quantity . ' barcode - ' . $result->barcode . '<b> Итог: </b>' . $result->equal_price . '<br />';
         }

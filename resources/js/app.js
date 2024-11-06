@@ -25,26 +25,21 @@ function generateBarcode() {
     }
     return barcode;
 }
-function book(barcode = generateBarcode()) {
+function book() {
     $.ajax({
-        url: "/book/" + barcode,
+        url: "/book",
         method: "GET",
         dataType: "json",
-        data: barcode,
         success: function (data, textStatus, xhr) {
             if (xhr.status != 200) {
-                reGenerateBarcode();
+                book();
             } else {
-                approve(barcode);
+                approve(data.barcode);
             }
         },
     });
 }
 
-function reGenerateBarcode() {
-    let barcode = generateBarcode();
-    book(barcode);
-}
 
 $("#book_button").on("click", () => {
     book();
