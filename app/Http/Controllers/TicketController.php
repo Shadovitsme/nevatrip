@@ -27,7 +27,7 @@ class TicketController extends Controller
     }
 
     public function findBarcodeInBooking($barcode)
-    {
+    {   
         $queryResult = DB::table('booking')->where('barcode', $barcode)->get();
         if (empty($queryResult)) {
             return true;
@@ -36,25 +36,24 @@ class TicketController extends Controller
         }
     }
 
-
-    public function approve($barcode)
+    public function approve(Request $req)
     {
         $answerChoose = rand(0, 1);
         if ($answerChoose == 0) {
             return response(['message' => 'order successfully aproved'], 200, ['Content-type' => 'Application/json']);
         } else {
-            switch (rand(0, 4)) {
+            switch (rand(0, 3)) {
                 case 0:
-                    return response(['error' => 'event cancelled'], 401, ['Content-type' => 'Application/json']);
+                    return response(['error' => 'event cancelled'], 400, ['Content-type' => 'Application/json']);
                     break;
                 case 1:
-                    return response(['error' => 'no tickets'], 401, ['Content-type' => 'Application/json']);
+                    return response(['error' => 'no tickets'], 400, ['Content-type' => 'Application/json']);
                     break;
                 case 2:
-                    return response(['error' => 'no seats'], 401, ['Content-type' => 'Application/json']);
+                    return response(['error' => 'no seats'], 400, ['Content-type' => 'Application/json']);
                     break;
                 case 3:
-                    return response(['error' => 'fan removed'], 401, ['Content-type' => 'Application/json']);
+                    return response(['error' => 'fan removed'], 400, ['Content-type' => 'Application/json']);
                     break;
             }
         }
@@ -64,7 +63,7 @@ class TicketController extends Controller
     {
         $noFinishedBarcode = rand(0, 9999999);
         if (strlen($noFinishedBarcode) < 7) {
-            for ($i = 0; $i <= 8 - strlen($noFinishedBarcode); $i++) {
+            for ($i = 0; $i < (8 - strlen($noFinishedBarcode)); $i++) {
                 $noFinishedBarcode = 0 . $noFinishedBarcode;
             }
         }
@@ -91,15 +90,14 @@ class TicketController extends Controller
 
     function addOrderToDatabase(Request $req)
     {
-        $ticket_adult_price = $req->query('ticket_adult_price');
-        $ticket_adult_quantity = $req->query('ticket_adult_quantity');
-        $ticket_kid_price = $req->query('ticket_kid_price');
-        $ticket_kid_quantity = $req->query('ticket_kid_quantity');
-        $event_id = $req->query('event_id');
-        $event_date = $req->query('event_date');
-        $barcode = $req->query('barcode');
+        $ticket_adult_price = $req->json('ticket_adult_price');
+        $ticket_adult_quantity = $req->json('ticket_adult_quantity');
+        $ticket_kid_price = $req->json('ticket_kid_price');
+        $ticket_kid_quantity = $req->json('ticket_kid_quantity');
+        $event_id = $req->json('event_id');
+        $event_date = $req->json('event_date');
+        $barcode = $req->json('barcode');
 
-        // TODO сделать расчет итоговой цены в самой таблице
         $equal_price = $ticket_adult_price * $ticket_adult_quantity + $ticket_kid_price * $ticket_kid_quantity;
         DB::table('order_list')->insert([
             'event_id' => $event_id,

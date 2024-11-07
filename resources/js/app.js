@@ -1,5 +1,11 @@
 import './bootstrap';
 
+$.ajaxSetup({
+    headers: {
+        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+    },
+});
+
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
@@ -21,9 +27,10 @@ function book() {
     let payload = dataMock();
     $.ajax({
         url: "/book",
-        method: "GET",
+        method: "post",
         dataType: "json",
-        data: payload,
+        contentType: "applicatio/json",
+        data: JSON.stringify(payload),
         success: function (data, textStatus, xhr) {
             if (xhr.status != 200) {
                 book();
@@ -41,8 +48,8 @@ $("#book_button").on("click", () => {
 
 function approve(barcode, payload) {
     $.ajax({
-        url: "/approve/" + barcode,
-        method: "GET",
+        url: "/approve",
+        method: "POST",
         dataType: "json",
         data: { barcode: barcode },
         success: function (data, textStatus, xhr) {
@@ -68,9 +75,10 @@ function dataMock() {
 function addToDatabase(payload) {
     $.ajax({
         url: "/addToDatabase",
-        method: "get",
+        method: "post",
         dataType: "json",
-        data: payload,
+        contentType: "applicatio/json",
+        data: JSON.stringify(payload),
         success: function (data) {
             console.log("data");
         },
