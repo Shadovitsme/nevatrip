@@ -97,6 +97,7 @@ class TicketController extends Controller
         $event_id = $req->json('event_id');
         $event_date = $req->json('event_date');
         $barcode = $req->json('barcode');
+        $extraTypes = $req->json('extraTypes');
 
         $equal_price = $ticket_adult_price * $ticket_adult_quantity + $ticket_kid_price * $ticket_kid_quantity;
         DB::table('order_list')->insert([
@@ -107,8 +108,21 @@ class TicketController extends Controller
             'ticket_kid_price' => $ticket_kid_price,
             'ticket_kid_quantity' => $ticket_kid_quantity,
             'barcode' => $barcode,
-            'equal_price' => $equal_price
+            'equal_price' => $equal_price,
+            'other_types' => $extraTypes,
         ]);
+        // TODO написать миграцию которая будет добавлять в бд пару типов билетов
+        if ($extraTypes) {
+            $ticketTypeId = DB::table('ticket_types')->where('name', $req->json('ticket_type'))->get('id');
+            $orderId = DB::table('order_list')->where('barcode', $barcode)->get('id');
+            DB::table('connect_types_orders')->insert(
+                [
+                    'order_id' => $orderId[0]->id,
+                    'type_id' => $ticketTypeId[0]->id,
+                    'count' => $req->json('ticket_type_count')
+                ]
+            );
+        }
         $queryResult = DB::table('order_list')->where('barcode', $barcode)->get();
         foreach ($queryResult as $result) {
             return 'Аргументы которые функция получает на входе: event_id - ' . $result->event_id . ', event_date - ' . $result->event_date . ', ticket_adult_price - ' . $result->ticket_adult_price . ', ticket_adult_quantity - ' . $result->ticket_adult_quantity . ', ticket_kid_price - ' . $result->ticket_kid_price . ', ticket_kid_quantity - ' . $result->ticket_kid_quantity . ' barcode - ' . $result->barcode . '<b> Итог: </b>' . $result->equal_price . '<br />';
