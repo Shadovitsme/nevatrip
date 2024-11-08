@@ -111,7 +111,6 @@ class TicketController extends Controller
             'equal_price' => $equal_price,
             'other_types' => $extraTypes,
         ]);
-        // TODO написать миграцию которая будет добавлять в бд пару типов билетов
         if ($extraTypes) {
             $ticketTypeId = DB::table('ticket_types')->where('name', $req->json('ticket_type'))->get('id');
             $orderId = DB::table('order_list')->where('barcode', $barcode)->get('id');

@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id()->autoIncrement();
             $table->integer('event_id');
             $table->string('event_date', length: 23);
-            $table->integer('ticket_adult_price');
+            $table->float('ticket_adult_price', 2);
             $table->integer('ticket_adult_quantity');
-            $table->integer('ticket_kid_price');
+            $table->float('ticket_kid_price', 2);
             $table->integer('ticket_kid_quantity');
             $table->string('barcode', length: 120);
-            $table->integer('equal_price');
+            $table->float('equal_price', 2);
             $table->timestamps();
         });
     }
