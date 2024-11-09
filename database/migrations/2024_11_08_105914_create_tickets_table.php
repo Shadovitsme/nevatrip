@@ -11,27 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('connect_types_orders', function (Blueprint $table) {
+        Schema::create('tickets', function (Blueprint $table) {
             $table->id();
-
-            $table->unsignedBigInteger('order_id');
-            $table->foreign('order_id')->references('id')->on('order_list');
-
             $table->unsignedBigInteger('type_id');
-            $table->foreign('type_id')->references('id')->on('ticket_types');
-
-            $table->integer('count');
-
+            $table->unsignedBigInteger('booking_id');
+            $table->decimal('sell_price');
+            $table->integer('quantity');
             $table->timestamps();
+
+            $table->foreign('type_id')->references('id')->on('ticket_types');
+            $table->foreign('booking_id')->references('id')->on('bookings');
         });
     }
-
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('connect_types_orders');
+        Schema::dropIfExists('tickets');
     }
 };

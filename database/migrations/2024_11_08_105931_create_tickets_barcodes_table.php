@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('order_list', function (Blueprint $table) {
-            $table->boolean('other_types');
+        Schema::create('tickets_barcodes', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('ticket_id');
+            $table->string('barcode');
+            $table->timestamps();
+            $table->foreign('ticket_id')->references('id')->on('tickets');
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('order_list', function (Blueprint $table) {
-            $table->dropColumn('other_types');
-        });
+        Schema::dropIfExists('tickets_barcodes');
     }
 };
