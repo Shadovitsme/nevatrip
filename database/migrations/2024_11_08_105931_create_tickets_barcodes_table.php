@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tickets_barcodes', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('ticket_id');
+            $table->unsignedBigInteger('ticket_id')->nullable()->default(NULL);
             $table->string('barcode');
             $table->timestamps();
             $table->foreign('ticket_id')->references('id')->on('tickets');

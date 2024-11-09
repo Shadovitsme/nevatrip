@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('type_id');
-            $table->unsignedBigInteger('booking_id');
+            $table->unsignedBigInteger('booking_id')->nullable()->default(NULL);
             $table->decimal('sell_price');
             $table->integer('quantity');
             $table->timestamps();

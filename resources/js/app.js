@@ -67,22 +67,8 @@ function dataMock() {
     let payload = {
         event_id: getRandomInt(1000000),
         event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
-        ticket_adult_price: getRandomInt(1000),
-        ticket_adult_quantity: getRandomInt(20),
-        ticket_kid_price: getRandomInt(1000),
-        ticket_kid_quantity: getRandomInt(20),
-        extraTypes: extraTypes,
+        quantity: getRandomInt(100),
     };
-    const lgot = "lgot";
-    const group = "group";
-    if (extraTypes) {
-        // TODO добавить функцию чтобы она мол тянула данные из бд(тип выпадающее меню, где черз контрл можно ввести всякие данные)
-        // TODO вообще сделать интерфейс с норм выбором что к чему
-        // TODO и в этом интерфейсе сделать кнопку "святой рандом" которая будет мокать данные
-
-        payload["ticket_type"] = lgot;
-        payload["ticket_type_count"] = getRandomInt(10);
-    }
 
     return payload;
 }

@@ -9,26 +9,27 @@ use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
-
+// TODO сделать тут генерацию для каждого билета и проверку этих баркодов не по таблице букингс
     public function book(Request $req)
     {
+        for ($i = 1; $i <= $req->json('quantity'); $i++) {
         $barcode = $this->generateBarcode();
-        if ($this->checkBarcodeUniqInOrderTable($barcode) || $this->findBarcodeInBooking($barcode)) {
+            if ($this->findBarcode($barcode)) {
             return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
-        } else {
-            DB::table('booking')->insert(['barcode' => $barcode]);
-            return response()->json(
-                [
-                    'barcode' => $barcode,
-                    'message' => 'order successfully booked'
-                ]
-            );
+            } else {
+                DB::table('tickets_barcodes')->insert(['barcode' => $barcode]);
+            }
         }
+        return response()->json(
+            [
+                'message' => 'order successfully booked'
+            ]
+        );
     }
 
-    public function findBarcodeInBooking($barcode)
-    {   
-        $queryResult = DB::table('booking')->where('barcode', $barcode)->get();
+    public function findBarcode($barcode)
+    {
+        $queryResult = DB::table('tickets_barcodes')->where('barcode', $barcode)->get();
         if (empty($queryResult)) {
             return true;
         } else {
@@ -38,6 +39,7 @@ class TicketController extends Controller
 
     public function approve(Request $req)
     {
+        // TODO либо сделать удаление баркодов из бд при неуспехе этого этапа либо хранить баркоды в отдельном массиве
         $answerChoose = rand(0, 1);
         if ($answerChoose == 0) {
             return response(['message' => 'order successfully aproved'], 200, ['Content-type' => 'Application/json']);
@@ -61,6 +63,7 @@ class TicketController extends Controller
 
     function generateBarcode()
     {
+        // TODO понять что делать если контрольная сумма =10
         $noFinishedBarcode = rand(0, 9999999);
         if (strlen($noFinishedBarcode) < 7) {
             for ($i = 0; $i < (8 - strlen($noFinishedBarcode)); $i++) {
@@ -88,6 +91,7 @@ class TicketController extends Controller
         }
     }
 
+    // TODO переделать на добавление данных в кучу других таблиц
     function addOrderToDatabase(Request $req)
     {
         $ticket_adult_price = $req->json('ticket_adult_price');
