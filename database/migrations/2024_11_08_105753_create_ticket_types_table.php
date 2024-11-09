@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::table('ticket_types')->insert(['name' => 'testname']);
+        DB::table('ticket_types')->insert(['name' => 'testname'], ['name' => 'brand new testname']);
     }
 
     /**

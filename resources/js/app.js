@@ -24,7 +24,12 @@ function randomDate(start, end, startHour, endHour) {
 }
 
 function book() {
-    let payload = dataMock();
+    let payload = {
+        quantityType1: getRandomInt(100),
+        quantityType2: getRandomInt(100),
+        idType1: 1,
+        idType2: 2,
+    };
     $.ajax({
         url: "/book",
         method: "post",
@@ -32,12 +37,11 @@ function book() {
         contentType: "applicatio/json",
         data: JSON.stringify(payload),
         success: function (data, textStatus, xhr) {
-            if (xhr.status != 200) {
-                book();
-            } else {
-                payload["barcodes"] = data.barcodes;
-                approve(payload);
-            }
+            payload["barcodes"] = data.barcodes;
+            approve(payload);
+        },
+        error: function (data) {
+            book();
         },
     });
 }
@@ -57,14 +61,6 @@ function approve(payload) {
             }
         },
     });
-}
-
-function dataMock() {
-    let payload = {
-        quantity: getRandomInt(100),
-    };
-
-    return payload;
 }
 
 function addToDatabase(payload) {

@@ -9,23 +9,47 @@ use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
-    public function book(Request $req)
+    public function checkBook(Request $req)
     {
-        $arBarcode = array();
-        for ($i = 0; $i <= $req->json('quantity'); $i++) {
-        $barcode = $this->generateBarcode();
-            if ($this->findBarcodeIbTable($barcode) || in_array($barcode, $arBarcode)) {
-            return response(['error' => 'barcode already exists'], 401, ['Content-type' => 'Application/json']);
-            } else {
-                $arBarcode[] = $barcode;
+        $arBarcodeType1 = array();
+        for ($i = 0; $i <= $req->json('quantityType1'); $i++) {
+            $barcode = $this->generateBarcode();
+            while ($this->findBarcodeIbTable($barcode) || in_array($barcode, $arBarcodeType1)) {
+                $barcode = $this->generateBarcode();
             }
+            $arBarcodeType1[] = $barcode;
         }
-        return response()->json(
-            [
-                'barcodes' => $arBarcode,
-                'message' => 'order successfully booked'
-            ]
-        );
+        $statType1 = $this->book($arBarcodeType1, $req);
+        if ($statType1->getStatusCode() !== 200) {
+            return $statType1;
+        }
+
+        $arBarcodeType2 = array();
+        for ($i = 0; $i <= $req->json('quantityType2'); $i++) {
+            $barcode = $this->generateBarcode();
+            while ($this->findBarcodeIbTable($barcode) || in_array($barcode, $arBarcodeType2)) {
+                $barcode = $this->generateBarcode();
+            }
+            $arBarcodeType1[] = $barcode;
+        }
+        return $this->book($arBarcodeType2, $req);
+    }
+
+    public function book($arBarcode, $req)
+    {
+
+
+        if (rand(0, 1)) {
+            return response()->json(
+                [
+                    'barcodes' => $arBarcode,
+                    'message' => 'order successfully booked'
+                ]
+            );
+        } else {
+            return response(['error' => 'barcode already exists'], 400, ['Content-type' => 'Application/json']);
+        }
+
     }
 
     private function findBarcodeIbTable($barcode)
@@ -66,14 +90,15 @@ class TicketController extends Controller
         // TODO понять что делать если контрольная сумма =10
         $noFinishedBarcode = rand(0, 9999999);
         if (strlen($noFinishedBarcode) < 7) {
-            for ($i = 0; $i < (8 - strlen($noFinishedBarcode)); $i++) {
+            for ($i = 0; $i < (9 - strlen($noFinishedBarcode)); $i++) {
                 $noFinishedBarcode = 0 . $noFinishedBarcode;
             }
         }
         $arNotFinishedBarcode = str_split($noFinishedBarcode);
+
         $sumNotChetNum = $arNotFinishedBarcode[0] + $arNotFinishedBarcode[2] + $arNotFinishedBarcode[4] + $arNotFinishedBarcode[6];
         $sumNotChetNum = $sumNotChetNum * 3;
-        $sumChetNum = $arNotFinishedBarcode[0] + $arNotFinishedBarcode[2] + $arNotFinishedBarcode[4] + $arNotFinishedBarcode[6];
+        $sumChetNum = $arNotFinishedBarcode[1] + $arNotFinishedBarcode[3] + $arNotFinishedBarcode[5];
         $numSum = $sumChetNum + $sumNotChetNum;
         $oneNum = $numSum % 10;
         $controlNum = 10 - $oneNum;
@@ -121,5 +146,6 @@ class TicketController extends Controller
                 'barcode' => $code
             ]);
         }
+        
     }
 }
