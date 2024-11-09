@@ -35,8 +35,8 @@ function book() {
             if (xhr.status != 200) {
                 book();
             } else {
-                payload["barcode"] = data.barcode;
-                approve(data.barcode, payload);
+                payload["barcodes"] = data.barcodes;
+                approve(payload);
             }
         },
     });
@@ -46,12 +46,11 @@ $("#book_button").on("click", () => {
     book();
 });
 
-function approve(barcode, payload) {
+function approve(payload) {
     $.ajax({
         url: "/approve",
         method: "POST",
         dataType: "json",
-        data: { barcode: barcode },
         success: function (data, textStatus, xhr) {
             if (xhr.status == 200) {
                 addToDatabase(payload);
@@ -60,13 +59,8 @@ function approve(barcode, payload) {
     });
 }
 
-
 function dataMock() {
-    let extraTypes = 1;
-    // let extraTypes = getRandomInt(2) == 1;
     let payload = {
-        event_id: getRandomInt(1000000),
-        event_date: randomDate(new Date(2020, 0, 1), new Date(), 0, 24),
         quantity: getRandomInt(100),
     };
 

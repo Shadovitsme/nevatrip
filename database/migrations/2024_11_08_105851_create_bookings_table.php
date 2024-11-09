@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Carbon\Carbon;
 
 return new class extends Migration
 {
@@ -15,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('event_id');
             $table->decimal('equal_price', 15);
-            $table->timestamps();
+            $table->date('created_at')->default(Carbon::now());
             $table->foreign('event_id')->references('id')->on('events');
         });
     }
