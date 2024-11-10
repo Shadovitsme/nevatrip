@@ -25,23 +25,28 @@ function randomDate(start, end, startHour, endHour) {
 
 function book() {
     let payload = {
-        quantityType1: getRandomInt(100),
-        quantityType2: getRandomInt(100),
-        idType1: 1,
-        idType2: 2,
+        tickets: [
+            {
+                type: 1,
+                quantity: getRandomInt(10),
+            },
+            {
+                type: 2,
+                quantity: getRandomInt(10),
+            },
+        ],
     };
     $.ajax({
-        url: "/book",
+        url: "/order_tickets",
         method: "post",
         dataType: "json",
         contentType: "applicatio/json",
         data: JSON.stringify(payload),
         success: function (data, textStatus, xhr) {
-            payload["barcodes"] = data.barcodes;
-            approve(payload);
+            show(payload, data);
         },
         error: function (data) {
-            book();
+            show(payload, data);
         },
     });
 }
@@ -50,28 +55,8 @@ $("#book_button").on("click", () => {
     book();
 });
 
-function approve(payload) {
-    $.ajax({
-        url: "/approve",
-        method: "POST",
-        dataType: "json",
-        success: function (data, textStatus, xhr) {
-            if (xhr.status == 200) {
-                addToDatabase(payload);
-            }
-        },
-    });
+function show(request, result) {
+    $(".result").html(
+        JSON.stringify(request) + "<br><br>" + JSON.stringify(result)
+    );
 }
-
-function addToDatabase(payload) {
-    $.ajax({
-        url: "/addToDatabase",
-        method: "post",
-        dataType: "json",
-        contentType: "applicatio/json",
-        data: JSON.stringify(payload),
-        success: function (data) {
-            console.log("data");
-        },
-    });
-};
