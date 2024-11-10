@@ -23,7 +23,9 @@ return new class extends Migration
             $table->foreign('event_id')->references('id')->on('events');
         });
 
-        DB::table('ticket_types_events')->insert([
+        DB::table('ticket_types_events')->insert(
+            [
+                [
             'price' => 100,
             'ticket_type_id' => 1,
             'event_id' => 1
@@ -32,6 +34,7 @@ return new class extends Migration
                 'price' => 200,
                 'ticket_type_id' => 2,
                 'event_id' => 1
+                ]
             ]
         );
     }

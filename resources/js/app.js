@@ -27,17 +27,17 @@ function book() {
     let payload = {
         tickets: [
             {
-                type: 1,
+                type: "1",
                 quantity: getRandomInt(10),
             },
             {
-                type: 2,
+                type: "2",
                 quantity: getRandomInt(10),
             },
         ],
     };
     $.ajax({
-        url: "/order_tickets",
+        url: "/chooseAction",
         method: "post",
         dataType: "json",
         contentType: "applicatio/json",

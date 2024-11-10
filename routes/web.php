@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 
 Route::controller(TicketController::class)->group(function () {
-    Route::post('/order_tickets', 'orderTickets');
+    Route::post('/chooseAction', 'chooseAction');
     Route::post('/approve', 'approve');
     Route::post('/addToDatabase', 'addOrderToDatabase');
 });

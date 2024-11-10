@@ -10,7 +10,23 @@ use Illuminate\Support\Facades\Http;
 
 class TicketController extends Controller
 {
-    public function orderTickets(Request $req)
+
+    public function chooseAction(Request $req)
+    {
+        $book = $this->orderTickets($req);
+        if ($book->getStatusCode() != 200) {
+            return $book;
+        }
+        $barcodes = (json_decode($book->content()))->tickets;
+        $approve = $this->approve();
+        if ($approve->getStatusCode() != 200) {
+            return $approve;
+        }
+        return $this->addOrderToDatabase($req, $barcodes);
+    }
+
+
+    public function orderTickets($req)
     {
         if (empty($req->json('tickets'))) {
             return response(['error' => 'no data provided'], 400, ['Content-type' => 'Application/json']);
@@ -48,11 +64,16 @@ class TicketController extends Controller
             }
         }
 
-        return response([
-            'message' => 'order successfully booked',
-            'tickets' => $arBarcodes
-        ], 200, ['Content-type' => 'Application/json']);
+        $bookState = $this->book();
+        if ($bookState->getStatusCode() == 200) {
+            return response([
+                'tickets' => $arBarcodes,
+            ], 200, ['Content-type' => 'Application/json']);
+        } else {
+            return $bookState;
+        }
     }
+
 
     private function findBarcodeIbTable($barcode)
     {
@@ -100,7 +121,7 @@ class TicketController extends Controller
     {
         $noFinishedBarcode = rand(0, 9999999);
         if (strlen($noFinishedBarcode) < 7) {
-            for ($i = 0; $i < (9 - strlen($noFinishedBarcode)); $i++) {
+            for ($i = 0; $i < (8 - strlen($noFinishedBarcode)); $i++) {
                 $noFinishedBarcode = 0 . $noFinishedBarcode;
             }
         }
@@ -123,63 +144,48 @@ class TicketController extends Controller
     // TODO переделать на добавление данных в кучу других таблиц
     // TODO пробежаться по своей бд и подбить эрайзер под данную версию
     // TODO сделать бронь разных типов билетов
-    public function addOrderToDatabase(Request $req)
+    public function addOrderToDatabase(Request $req, $barcodes)
     {
         $event_id = 1;
-        $barcodes1 = $req->json('barcodesT1');
-        $type_id1 = 1;
-        $quantityT1 = $req->json('quantityType1');
-        $sell_priceT1 = (DB::table('ticket_types_events')
-        ->where('ticket_type_id', $type_id1)
-            ->where('event_id', $event_id)
-            ->get('price'))[0]->price;
-
-
-        $barcodes2 = $req->json('barcodesT2');
-        $type_id2 = 2;
-        $quantityT2 = $req->json('quantityType2');
-        $sell_priceT2 = (DB::table('ticket_types_events')
-        ->where('ticket_type_id', $type_id2)
-            ->where('event_id', $event_id)
-            ->get('price'))[0]->price;
-
-
-        $equal_price = $sell_priceT1 * $quantityT1 + $sell_priceT2 * $quantityT2;
+        $equal_price = 0;
 
         $booking_id = DB::table('bookings')->insertGetId([
             'event_id' => $event_id,
-            'equal_price' => $equal_price,
+            'equal_price' => 0,
         ]);
 
+        foreach ($req->json('tickets') as $tickets) {
+            $type_id = $tickets['type'];
+            $nowArBarcodes = $barcodes->$type_id;
+            $quantity = $tickets['quantity'];
 
-        $ticketId = DB::table('tickets')->insertGetId(['type_id' => $type_id1,
-            'booking_id' => $booking_id,
-            'sell_price' => $sell_priceT1,
-            'quantity' => $quantityT2
-        ]);
+            $sell_price = (DB::table('ticket_types_events')
+            ->where('ticket_type_id', $type_id)
+            ->where('event_id', $event_id)
+            ->get('price'))[0]->price;
 
-        foreach ($barcodes1 as $code) {
-            echo $code . '<br ?>';
-            DB::table('tickets_barcodes')->insert([
-                'ticket_id' => $ticketId,
-                'barcode' => $code
+            $ticketId = DB::table('tickets')->insertGetId([
+                'type_id' => $type_id,
+                'booking_id' => $booking_id,
+                'sell_price' => $sell_price,
+                'quantity' => $quantity
             ]);
+
+            foreach ($nowArBarcodes as $code) {
+                DB::table('tickets_barcodes')->insert([
+                    'ticket_id' => $ticketId,
+                    'barcode' => $code
+                ]);
+            }
+
+            $equal_price = $equal_price + $sell_price * $quantity;
         }
 
-        $ticketId = DB::table('tickets')->insertGetId([
-            'type_id' => $type_id2,
-            'booking_id' => $booking_id,
-            'sell_price' => $sell_priceT2,
-            'quantity' => $quantityT2
-        ]);
+        DB::table('bookings')->where('id', $booking_id)
+        ->update(
+            ['equal_price' => $equal_price]
+        );
 
-        foreach ($barcodes2 as $code) {
-            echo $code . '<br ?>';
-            DB::table('tickets_barcodes')->insert([
-                'ticket_id' => $ticketId,
-                'barcode' => $code
-            ]);
-        }
-        
+        return  response(['message' => 'order added'], 200, ['Content-type' => 'Application/json']);
     }
 }
