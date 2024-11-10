@@ -13,38 +13,44 @@ class TicketController extends Controller
 
     public function chooseAction(Request $req)
     {
-        // TODO Реквест обрабатывается только в главной функции и дальше передаются исклюительно необходимые данные, а не весь реквест. ОПЦИОНАЛЬНОЕ.
-        $book = $this->orderTickets($req);
-        if ($book->getStatusCode() != 200) {
-            return $book;
-        }
-        $barcodes = (json_decode($book->content()))->tickets;
-
-        // TODO Поясниить в ридми что логика внешнего API не поменялась и вместо одного заказа на множество билетов каждый билет становится отдельным заказом для внешнего API
-        foreach ($barcodes as $barcode) {
-            $approve = $this->approve($barcode);
-            if ($approve->getStatusCode() != 200) {
-                return $approve;
-            }
-        }
-
-        return $this->addOrderToDatabase($req, $barcodes);
-    }
-
-
-    public function orderTickets($req)
-    {
         if (empty($req->json('tickets'))) {
             return response(['error' => 'no data provided'], 400, ['Content-type' => 'Application/json']);
         }
+        $arBarcodes = $this->orderTickets($req->json('tickets'), $req->json('event'));
 
+        if (empty($req->json('tickets'))) {
+            return response(['error' => 'external API error'], 500, ['Content-type' => 'Application/json']);
+        }
+
+        // Логика внешнего API не поменялась и вместо одного заказа на множество билетов каждый билет становится отдельным заказом для внешнего API.
+        foreach ($arBarcodes as $barcodes) {
+            foreach ($barcodes as $barcode) {
+                $approve = $this->approve($barcode);
+                if ($approve->getStatusCode() != 200) {
+                    // По хорошему на клиент не надо передавать сырые ошибки от внешнего API, но в рамках задания так проще.
+                    return $approve;
+                }
+            }
+        }
+
+        if (!$this->addOrderToDatabase($req->json('event'), $req->json('tickets'), $arBarcodes)) {
+            return response(['error' => 'order not saved'], 500, ['Content-type' => 'Application/json']);
+        }
+
+        return response(['message' => 'order added'], 200, ['Content-type' => 'Application/json']);
+    }
+
+
+    public function orderTickets($arTickets, $event): null|array
+    {
         $arBarcodes = [];
 
-        foreach ($req->json('tickets') as $tickets) {
+        foreach ($arTickets as $tickets) {
 
             $arBarcodes[$tickets['type']] = [];
 
             for ($i = $tickets['quantity']; $i > 0; $i--) {
+                // Лимит повтора запроса к стороннему API на всякий случай.
                 $lim = 0;
 
                 while (true) {
@@ -54,7 +60,7 @@ class TicketController extends Controller
                         $barcode = $this->generateBarcode();
                     }
 
-                    $try = $this->book(barcode: $barcode);
+                    $try = $this->book(event_id: $event, barcode: $barcode);
 
                     if ($try->getStatusCode() == 200) {
                         $arBarcodes[$tickets['type']][] = $barcode;
@@ -62,17 +68,14 @@ class TicketController extends Controller
                     }
 
                     if ($lim > 100) {
-                        return response(['error' => 'external error'], 500, ['Content-type' => 'Application/json']);
+                        return null;
                     }
 
                     $lim++;
                 }
             }
         }
-        return response([
-            'message' => 'order successfully booked',
-            'tickets' => $arBarcodes
-        ], 200, ['Content-type' => 'Application/json']);
+        return $arBarcodes;
     }
 
 
@@ -118,11 +121,12 @@ class TicketController extends Controller
         }
     }
 
-    private function generateBarcode()
+    private function generateBarcode(): string
     {
         $noFinishedBarcode = rand(0, 9999999);
-        if (strlen($noFinishedBarcode) < 7) {
-            for ($i = 0; $i < (8 - strlen($noFinishedBarcode)); $i++) {
+        $len = strlen($noFinishedBarcode);
+        if ($len < 7) {
+            for ($i = $len; $i < 7; $i++) {
                 $noFinishedBarcode = 0 . $noFinishedBarcode;
             }
         }
@@ -141,11 +145,9 @@ class TicketController extends Controller
         return $barcode;
     }
 
-    public function addOrderToDatabase(Request $req, $barcodes)
+    public function addOrderToDatabase($event_id, $arTickets, $barcodes): bool
     {
-        // TODO Если будет время быстренько замокать рандомный Event ID из запроса.
-        $event_id = $req->json('event');
-        // TODO теоретически по заданию это должно быть вычислено из стоимости каждой категории билетов, которое передается в первом запросе... что глупо, но задание есть задание, поэтому пояснить в ридми почему мы откланились от изначального задания после нормализации.
+        // TODO теоретически по заданию это должно быть вычислено из стоимости каждой категории билетов, которое передается в первом запросе... что глупо, но задание есть задание, поэтому пояснить в ридми почему мы отказались от изначального задания после нормализации.
         $equal_price = 0;
 
         $booking_id = DB::table('bookings')->insertGetId([
@@ -153,9 +155,9 @@ class TicketController extends Controller
             'equal_price' => 0,
         ]);
 
-        foreach ($req->json('tickets') as $tickets) {
+        foreach ($arTickets as $tickets) {
             $type_id = $tickets['type'];
-            $arBarcodes = $barcodes->$type_id;
+            $arBarcodes = $barcodes[$type_id];
             $quantity = $tickets['quantity'];
 
             $sell_price = (DB::table('ticket_types_events')
@@ -185,6 +187,6 @@ class TicketController extends Controller
             ['equal_price' => $equal_price]
         );
 
-        return  response(['message' => 'order added'], 200, ['Content-type' => 'Application/json']);
+        return true;
     }
 }

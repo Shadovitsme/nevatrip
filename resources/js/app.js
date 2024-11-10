@@ -26,7 +26,6 @@ function randomDate(start, end, startHour, endHour) {
 function book() {
     let payload = {
         event: getRandomInt(2),
-        // TODO добавить в тикет контроллер и миграцию
         tickets: [
             {
                 type: "1",
