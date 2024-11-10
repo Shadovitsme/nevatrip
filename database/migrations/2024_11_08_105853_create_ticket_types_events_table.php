@@ -34,6 +34,16 @@ return new class extends Migration
                 'price' => 200,
                 'ticket_type_id' => 2,
                 'event_id' => 1
+                ],
+                [
+                    'price' => 50,
+                    'ticket_type_id' => 1,
+                    'event_id' => 2
+                ],
+                [
+                    'price' => 1000,
+                    'ticket_type_id' => 2,
+                    'event_id' => 2
                 ]
             ]
         );

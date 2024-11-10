@@ -19,7 +19,13 @@ return new class extends Migration
             $table->string('event_date', 23);
             $table->timestamps();
         });
-        DB::table('events')->insert(['name' => 'greatest Show!', 'event_date' => '01.01.2000']);
+        DB::table('events')->insert([
+            ['name' => 'greatest Show!', 'event_date' => '01.01.2000'],
+            [
+                'name' => 'La la land',
+                'event_date' => '02.02.20022'
+            ]
+        ]);
     }
 
     /**

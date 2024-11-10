@@ -144,7 +144,7 @@ class TicketController extends Controller
     public function addOrderToDatabase(Request $req, $barcodes)
     {
         // TODO Если будет время быстренько замокать рандомный Event ID из запроса.
-        $event_id = 1;
+        $event_id = $req->json('event');
         // TODO теоретически по заданию это должно быть вычислено из стоимости каждой категории билетов, которое передается в первом запросе... что глупо, но задание есть задание, поэтому пояснить в ридми почему мы откланились от изначального задания после нормализации.
         $equal_price = 0;
 
