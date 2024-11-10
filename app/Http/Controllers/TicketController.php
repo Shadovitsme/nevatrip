@@ -13,15 +13,21 @@ class TicketController extends Controller
 
     public function chooseAction(Request $req)
     {
+        // TODO Реквест обрабатывается только в главной функции и дальше передаются исклюительно необходимые данные, а не весь реквест. ОПЦИОНАЛЬНОЕ.
         $book = $this->orderTickets($req);
         if ($book->getStatusCode() != 200) {
             return $book;
         }
         $barcodes = (json_decode($book->content()))->tickets;
-        $approve = $this->approve();
-        if ($approve->getStatusCode() != 200) {
-            return $approve;
+
+        // TODO Поясниить в ридми что логика внешнего API не поменялась и вместо одного заказа на множество билетов каждый билет становится отдельным заказом для внешнего API
+        foreach ($barcodes as $barcode) {
+            $approve = $this->approve($barcode);
+            if ($approve->getStatusCode() != 200) {
+                return $approve;
+            }
         }
+
         return $this->addOrderToDatabase($req, $barcodes);
     }
 
@@ -63,15 +69,10 @@ class TicketController extends Controller
                 }
             }
         }
-
-        $bookState = $this->book();
-        if ($bookState->getStatusCode() == 200) {
-            return response([
-                'tickets' => $arBarcodes,
-            ], 200, ['Content-type' => 'Application/json']);
-        } else {
-            return $bookState;
-        }
+        return response([
+            'message' => 'order successfully booked',
+            'tickets' => $arBarcodes
+        ], 200, ['Content-type' => 'Application/json']);
     }
 
 
@@ -87,8 +88,8 @@ class TicketController extends Controller
 
     public function approve($barcode = null)
     {
-        $answerChoose = rand(0, 1);
-        if ($answerChoose == 0) {
+        $answerChoose = rand(0, 10);
+        if ($answerChoose > 0) {
             return response(['message' => 'order successfully aproved'], 200, ['Content-type' => 'Application/json']);
         } else {
             switch (rand(0, 3)) {
@@ -140,13 +141,11 @@ class TicketController extends Controller
         return $barcode;
     }
 
-
-    // TODO переделать на добавление данных в кучу других таблиц
-    // TODO пробежаться по своей бд и подбить эрайзер под данную версию
-    // TODO сделать бронь разных типов билетов
     public function addOrderToDatabase(Request $req, $barcodes)
     {
+        // TODO Если будет время быстренько замокать рандомный Event ID из запроса.
         $event_id = 1;
+        // TODO теоретически по заданию это должно быть вычислено из стоимости каждой категории билетов, которое передается в первом запросе... что глупо, но задание есть задание, поэтому пояснить в ридми почему мы откланились от изначального задания после нормализации.
         $equal_price = 0;
 
         $booking_id = DB::table('bookings')->insertGetId([
@@ -156,7 +155,7 @@ class TicketController extends Controller
 
         foreach ($req->json('tickets') as $tickets) {
             $type_id = $tickets['type'];
-            $nowArBarcodes = $barcodes->$type_id;
+            $arBarcodes = $barcodes->$type_id;
             $quantity = $tickets['quantity'];
 
             $sell_price = (DB::table('ticket_types_events')
@@ -171,14 +170,14 @@ class TicketController extends Controller
                 'quantity' => $quantity
             ]);
 
-            foreach ($nowArBarcodes as $code) {
+            foreach ($arBarcodes as $code) {
                 DB::table('tickets_barcodes')->insert([
                     'ticket_id' => $ticketId,
                     'barcode' => $code
                 ]);
             }
 
-            $equal_price = $equal_price + $sell_price * $quantity;
+            $equal_price += $sell_price * $quantity;
         }
 
         DB::table('bookings')->where('id', $booking_id)

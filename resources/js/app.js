@@ -7,7 +7,7 @@ $.ajaxSetup({
 });
 
 function getRandomInt(max) {
-    return Math.floor(Math.random() * max);
+    return Math.floor(Math.random() * max + 1);
 }
 
 function randomDate(start, end, startHour, endHour) {
@@ -25,6 +25,8 @@ function randomDate(start, end, startHour, endHour) {
 
 function book() {
     let payload = {
+        event: getRandomInt(2),
+        // TODO добавить в тикет контроллер и миграцию
         tickets: [
             {
                 type: "1",
@@ -42,11 +44,11 @@ function book() {
         dataType: "json",
         contentType: "applicatio/json",
         data: JSON.stringify(payload),
-        success: function (data, textStatus, xhr) {
+        success: function (data) {
             show(payload, data);
         },
-        error: function (data) {
-            show(payload, data);
+        error: function (jqXHR) {
+            show(payload, jqXHR.responseJSON);
         },
     });
 }

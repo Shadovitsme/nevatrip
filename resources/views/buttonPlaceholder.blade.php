@@ -9,7 +9,6 @@
 </head>
 
 <body>
-    <x-menu>$menu</x-menu>
     <button id="book_button">book</button>
     <div class="result"></div>
 </body>
